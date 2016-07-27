@@ -6,13 +6,11 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-
 #include "nrf51.h"
 #include "nrf_delay.h"
 #include "nrf_gpio.h"
-
 #include "neopixel.h"
-
+#define input_pin	9
 // LEd strips
 neopixel_strip_t strip[8];
 volatile bool strip_changed[8] = {false, false, false, false, false, false, false, false};
@@ -115,12 +113,15 @@ void TIMER2_IRQHandler()
         NRF_TIMER2->EVENTS_COMPARE[1] = 0;
 
         // execute pattern calculation
-        proceed_with_pattern();
+        if(nrf_gpio_pin_read(input_pin) == 1)
+        	proceed_with_pattern();
     }
 }
 
 int main(void)
 {
+	// declare input port
+	nrf_gpio_cfg_input(input_pin, NRF_GPIO_PIN_NOPULL);
     init_ledstrips();
     setup_timers();
 
