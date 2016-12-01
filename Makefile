@@ -68,7 +68,7 @@ SOFTDEVICE = nordic/softdevice/s110_nrf51822_7.3.0_softdevice.hex
 
 all: tree.elf
 
-tree.elf: sdk/nrf51_startup.o nordic/nrf_delay.o neopixel.o tree.o
+tree.elf: sdk/nrf51_startup.o nordic/nrf_delay.o led.o tree.o
 	$(LD) $(LDFLAGS) $^ -o $@
 
 %.o: %.c %.s

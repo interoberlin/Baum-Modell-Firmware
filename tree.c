@@ -11,9 +11,9 @@
 #include "nrf_delay.h"
 #include "nrf_gpio.h"
 
-#include "neopixel.h"
-#include "../sdk/nrfduino.h"
-#include "../sdk/clock.h"
+#include "led.h"
+#include "sdk/nrfduino.h"
+#include "sdk/clock.h"
 
 // LED strips
 #define NUM_STRIPS      1
