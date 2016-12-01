@@ -17,10 +17,10 @@
 
 // LED strips
 #define NUM_STRIPS      1
-#define TOTAL_NUM_LEDS  5
+#define TOTAL_NUM_LEDS  165
 neopixel_strip_t strip[NUM_STRIPS];
 const uint8_t strip_at_pin[NUM_STRIPS]   = {NRFDUINO_PIN_A0}; //, 28, 2, 0};
-const uint8_t leds_per_strip[NUM_STRIPS] = {5};
+const uint8_t leds_per_strip[NUM_STRIPS] = {165};
 volatile bool strip_changed[NUM_STRIPS]  = {false}; //, false, false, false};
 
 // get the number of the strip from LED index
@@ -29,29 +29,21 @@ const uint8_t led_index_on_strip[TOTAL_NUM_LEDS]    = {0, 1, 2, 3, 4};
 
 
 // workaround:
-// static memory allocation because malloc is currently not working
-#define LED_MEM "\0\0\0" "\0\0\0\0\0\0\0\0"
-//#define LED_MEM "\xff\xff\xff" "\xff\xff\xff\xff\xff\xff\xff\xff"
-extern uint32_t heap_begin;
+// static memory allocation
+// because malloc is (currently) not working
 uint8_t led_memory[TOTAL_NUM_LEDS * 3];
-
-uint32_t my_mem;
 
 /**
  * @brief Initializes all LED strips
  */
 void init_ledstrips()
 {
-    //neopixel_init(&(strip[0]), 30, 5);
-
-    // initialize with zeroes
-//    led_memory = heap_begin; //LED_MEM LED_MEM LED_MEM LED_MEM LED_MEM;
-    strip[0].leds = led_memory; //0x20003600; //heap_begin+2000;
-    //return;
+    strip[0].leds = led_memory;
 
     for (int strip_num=0; strip_num<NUM_STRIPS; strip_num++)
     {
         neopixel_init(&strip[strip_num], strip_at_pin[strip_num], leds_per_strip[strip_num]);
+        // unnecessary, filled with zeroes by startup script anyways
         //neopixel_clear(&strip[strip_num]);
     }
 }
@@ -65,11 +57,13 @@ void calculate_new_led_values()
 
     for (uint8_t led=0; led<TOTAL_NUM_LEDS; led++)
     {
-        uint8_t warmwhite, coldwhite, amber;
+        uint8_t warmwhite = 0, coldwhite = 0, amber = 0;
+/*
         neopixel_get_color(&strip[current_strip], led, &warmwhite, &coldwhite, &amber);
         warmwhite = ((uint32_t) warmwhite + 1) % 256;
         coldwhite = ((uint32_t) coldwhite + 1) % 256;
         amber = ((uint32_t) amber + 1) % 256;
+*/
         neopixel_set_color(&strip[current_strip], led, warmwhite, coldwhite, amber);
     }
     strip_changed[current_strip] = true;
@@ -95,11 +89,11 @@ void setup_fps_timer(void)
      * 0 => 16 MHz
      * 6 => 250 kHz
      */
-    NRF_TIMER2->PRESCALER = 6;
+    NRF_TIMER2->PRESCALER = 2;
     // Set timer bit resolution
     NRF_TIMER2->BITMODE = TIMER_BITMODE_BITMODE_16Bit;
     // Set timer compare values
-    NRF_TIMER2->CC[0] = 1;
+    NRF_TIMER2->CC[0] = (1 >> 16)-1;
 
     // Enable interrupt on Timer 2, both for CC[0] and CC[1] compare match events
     NRF_TIMER2->INTENSET =
@@ -136,8 +130,6 @@ void TIMER2_Handler()
             }
         }
 
-        neopixel_set_color_and_show(&strip[0], 2, 30, 100, 0);
-
         calculate_new_led_values();
 
         nrf_gpio_pin_clear(NRFDUINO_PIN_LED);
@@ -156,26 +148,34 @@ int main(void)
 
     init_ledstrips();
 
-//    setup_fps_timer();
+    setup_fps_timer();
+
+    while(true)
+    {
+        asm("wfi;");
+    }
 
     // infinite loop
 	while(true)
 	{
-	    nrf_gpio_pin_set(NRFDUINO_PIN_LED);
-
-	    uint8_t i;
-	    for (i=0; i<255; i++)
+	    for (uint8_t j=0; j<TOTAL_NUM_LEDS; j++)
 	    {
-	        neopixel_set_color_and_show(&(strip[0]), 0, i, i, i);
-	        nrf_delay_ms(5);
+	        nrf_gpio_pin_set(NRFDUINO_PIN_LED);
+
+	        uint8_t i;
+	        for (i=0; i<255; i++)
+	        {
+	            neopixel_set_color_and_show(&(strip[0]), j, i, i, i);
+	            nrf_delay_ms(5);
+	        }
+
+	        nrf_gpio_pin_clear(NRFDUINO_PIN_LED);
+
+	        for (i=255; i>0; i--)
+	        {
+	            neopixel_set_color_and_show(&(strip[0]), j, i, i, i);
+	            nrf_delay_ms(5);
+	        }
 	    }
-
-	    nrf_gpio_pin_clear(NRFDUINO_PIN_LED);
-
-	    for (i=255; i>0; i--)
-        {
-            neopixel_set_color_and_show(&(strip[0]), 0, i, i, i);
-            nrf_delay_ms(5);
-        }
 	}
 }
