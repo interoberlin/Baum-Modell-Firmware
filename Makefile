@@ -36,15 +36,15 @@ CFLAGS += -ffunction-sections -fdata-sections
 CFLAGS += -fstrict-aliasing
 
 CFLAGS += -fno-builtin --short-enums
-CFLAGS += -I ../nordic/arm/
-CFLAGS += -I ../nordic/
-CFLAGS += -I ../nordic/sdk/nrf51822/Include
-CFLAGS += -I ../sdk/
+CFLAGS += -I nordic/arm/
+CFLAGS += -I nordic/
+CFLAGS += -I nordic/sdk/nrf51822/Include
+CFLAGS += -I sdk/
 
 # TODO: auto-detect chip revision
 CHIP_REVISION = aa
 
-LINKER_SCRIPT = ../sdk/linker/nrf51-blank-xx$(CHIP_REVISION).ld
+LINKER_SCRIPT = sdk/linker/nrf51-blank-xx$(CHIP_REVISION).ld
 LDFLAGS += -T $(LINKER_SCRIPT)
 LDFLAGS += -L /usr/lib/gcc/arm-none-eabi/4.8/armv6-m/
 LDFLAGS += -L /usr/lib/arm-none-eabi/newlib/armv6-m/
@@ -59,7 +59,7 @@ CFLAGS  += --specs=rdimon.specs
 LDFLAGS += -lrdimon
 
 # filename of used softdevice (full path)
-SOFTDEVICE = ../nordic/softdevice/s110_nrf51822_7.3.0_softdevice.hex
+SOFTDEVICE = nordic/softdevice/s110_nrf51822_7.3.0_softdevice.hex
 
 
 #
@@ -68,7 +68,7 @@ SOFTDEVICE = ../nordic/softdevice/s110_nrf51822_7.3.0_softdevice.hex
 
 all: tree.elf
 
-tree.elf: ../sdk/nrf51_startup.o ../nordic/nrf_delay.o neopixel.o tree.o
+tree.elf: sdk/nrf51_startup.o nordic/nrf_delay.o neopixel.o tree.o
 	$(LD) $(LDFLAGS) $^ -o $@
 
 %.o: %.c %.s
@@ -81,7 +81,7 @@ tree.elf: ../sdk/nrf51_startup.o ../nordic/nrf_delay.o neopixel.o tree.o
 	$(OBJCOPY) -Obinary $< $@
 
 clean:
-	rm -f *.o */*.o ../sdk/*.o ../nordic/*.o _build/*.o *.out *.bin *.elf *.hex *.map
+	rm -f *.o */*.o *.out *.bin *.elf *.hex *.map
 
 
 #
@@ -101,7 +101,7 @@ softdevice:
 #
 # Debugger
 #
-OPENOCD_CFG_DIR = ../sdk/debug/
+OPENOCD_CFG_DIR = sdk/debug/
 # workaround: problems because the folder is named like the target in the subfolder's Makefile
 .PHONY: debug
-include ../sdk/debug/Makefile
+include sdk/debug/Makefile
