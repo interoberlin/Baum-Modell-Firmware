@@ -1,3 +1,0 @@
-*.c: text
-*.h: text
-Makefile: text
