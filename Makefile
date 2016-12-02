@@ -23,6 +23,7 @@ GDB     = $(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)-gdb
 # Compiler and Linker
 #
 CFLAGS += -DNRF51
+CFLAGS += -DBLE_STACK_SUPPORT_REQD
 CFLAGS += -std=gnu99 -Wall -Wextra -g
 CFLAGS += -mcpu=cortex-m0 -mthumb -mabi=aapcs -mfloat-abi=soft
 CFLAGS += -O3
@@ -38,14 +39,19 @@ CFLAGS += -fstrict-aliasing
 CFLAGS += -fno-builtin --short-enums
 CFLAGS += -I nordic/arm/
 CFLAGS += -I nordic/
-CFLAGS += -I nordic/sdk/nrf51822/Include
+CFLAGS += -I nordic/sdk/nrf51822/Include/
+CFLAGS += -I nordic/sdk/nrf51822/Include/app_common/
+CFLAGS += -I nordic/sdk/nrf51822/Include/ble/
+CFLAGS += -I nordic/sdk/nrf51822/Include/ble/ble_services/
+CFLAGS += -I nordic/sdk/nrf51822/Include/sd_common/
+CFLAGS += -I nordic/sdk/nrf51822/Include/s110/
 CFLAGS += -I sdk/
 
 # TODO: auto-detect chip revision
 CHIP_REVISION = aa
 
-LINKER_SCRIPT = sdk/linker/nrf51-blank-xx$(CHIP_REVISION).ld
-LDFLAGS += -T $(LINKER_SCRIPT)
+LINKER_SCRIPT_BLANK = sdk/linker/nrf51-blank-xx$(CHIP_REVISION).ld
+LINKER_SCRIPT_SOFTDEVICE = sdk/linker/nrf51-s110-xx$(CHIP_REVISION).ld
 LDFLAGS += -L /usr/lib/gcc/arm-none-eabi/4.8/armv6-m/
 LDFLAGS += -L /usr/lib/arm-none-eabi/newlib/armv6-m/
 LDFLAGS += -static
@@ -60,16 +66,20 @@ LDFLAGS += -lrdimon
 
 # filename of used softdevice (full path)
 SOFTDEVICE = nordic/softdevice/s110_nrf51822_7.3.0_softdevice.hex
-
+NORDIC_SDK_SOURCE = nordic/sdk/nrf51822/Source
+SOFTDEVICE_DEPENDENCIES = $(NORDIC_SDK_SOURCE)/sd_common/softdevice_handler.o $(NORDIC_SDK_SOURCE)/ble/ble_advdata.o $(NORDIC_SDK_SOURCE)/ble/ble_conn_params.o $(NORDIC_SDK_SOURCE)/app_common/app_timer.o
 
 #
 # Build targets
 #
 
-all: tree.elf
+all: tree.elf test_ble.elf
 
 tree.elf: sdk/nrf51_startup.o nordic/nrf_delay.o led.o tree.o
-	$(LD) $(LDFLAGS) $^ -o $@
+	$(LD) $(LDFLAGS) -T $(LINKER_SCRIPT_BLANK) $^ -o $@
+
+test_ble.elf: sdk/nrf51_startup.o $(SOFTDEVICE_DEPENDENCIES) bluetooth.o test_ble.o
+	$(LD) $(LDFLAGS) -T $(LINKER_SCRIPT_SOFTDEVICE) $^ -o $@
 
 %.o: %.c %.s
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -81,7 +91,7 @@ tree.elf: sdk/nrf51_startup.o nordic/nrf_delay.o led.o tree.o
 	$(OBJCOPY) -Obinary $< $@
 
 clean:
-	rm -f *.o */*.o *.out *.bin *.elf *.hex *.map
+	rm -f *.o */*.o nordic/sdk/nrf51822/Source/*/*.o *.out *.bin *.elf *.hex *.map
 
 
 #
