@@ -1,13 +1,15 @@
 #ifndef BOARD_H
 #define BOARD_H
 
-#define PIN_LED_ADVERTISING 15
-#define PIN_LED_CONNECTED   16
-#define PIN_LED_DATA        28
+#include "sdk/nrfduino.h"
 
-#define PIN_LEDSTRIP0 30
-#define PIN_LEDSTRIP1  1
-#define PIN_LEDSTRIP2  2
-#define PIN_LEDSTRIP3  3
+#define PIN_LED_ADVERTISING NRFDUINO_PIN_IO0
+#define PIN_LED_CONNECTED   NRFDUINO_PIN_LED
+#define PIN_LED_DATA        NRFDUINO_PIN_IO1
+
+#define PIN_LEDSTRIP0       NRFDUINO_PIN_A0
+#define PIN_LEDSTRIP1       NRFDUINO_PIN_A1
+#define PIN_LEDSTRIP2       NRFDUINO_PIN_A2
+#define PIN_LEDSTRIP3       NRFDUINO_PIN_A3
 
 #endif // BOARD_H

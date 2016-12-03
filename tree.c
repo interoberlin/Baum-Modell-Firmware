@@ -17,10 +17,10 @@
 
 // LED strips
 #define NUM_STRIPS      1
-#define TOTAL_NUM_LEDS  165
+#define TOTAL_NUM_LEDS  5
 neopixel_strip_t strip[NUM_STRIPS];
 const uint8_t strip_at_pin[NUM_STRIPS]   = {NRFDUINO_PIN_A0}; //, 28, 2, 0};
-const uint8_t leds_per_strip[NUM_STRIPS] = {165};
+const uint8_t leds_per_strip[NUM_STRIPS] = {5};
 volatile bool strip_changed[NUM_STRIPS]  = {false}; //, false, false, false};
 
 // get the number of the strip from LED index
@@ -148,12 +148,7 @@ int main(void)
 
     init_ledstrips();
 
-    setup_fps_timer();
-
-    while(true)
-    {
-        asm("wfi;");
-    }
+    //setup_fps_timer();
 
     // infinite loop
 	while(true)
@@ -166,7 +161,7 @@ int main(void)
 	        for (i=0; i<255; i++)
 	        {
 	            neopixel_set_color_and_show(&(strip[0]), j, i, i, i);
-	            nrf_delay_ms(5);
+	            nrf_delay_ms(3);
 	        }
 
 	        nrf_gpio_pin_clear(NRFDUINO_PIN_LED);
@@ -174,8 +169,11 @@ int main(void)
 	        for (i=255; i>0; i--)
 	        {
 	            neopixel_set_color_and_show(&(strip[0]), j, i, i, i);
-	            nrf_delay_ms(5);
+	            nrf_delay_ms(3);
 	        }
+
+	        // completely off
+	        neopixel_set_color_and_show(&(strip[0]), j, 0, 0, 0);
 	    }
 	}
 }

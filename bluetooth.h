@@ -1,32 +1,34 @@
 #ifndef BLUETOOTH_H
 #define BLUETOOTH_H
 
+#include <stdio.h>
 #include <stdint.h>
 #include <string.h>
 #include <stdbool.h>
 
-#include "nordic_common.h"
-#include "nrf.h"
-#include "nrf51_bitfields.h"
+#include <nordic_common.h>
+#include <nrf.h>
+#include <nrf51_bitfields.h>
 
-#include "nrf_gpio.h"
+#include <nrf_gpio.h>
+#include <nrf_delay.h>
 
-#include "ble_hci.h"
-#include "ble_advdata.h"
-#include "ble_conn_params.h"
-#include "softdevice_handler.h"
-#include "ble_error_log.h"
-#include "ble_debug_assert_handler.h"
+#include <ble_hci.h>
+#include <ble_advdata.h>
+#include <ble_conn_params.h>
+#include <softdevice_handler.h>
+#include <ble_error_log.h>
+#include <ble_debug_assert_handler.h>
 
-#include "app_util_platform.h"
-#include "app_timer.h"
+#include <app_util_platform.h>
+#include <app_timer.h>
 
 #include "board.h"
 
 #define BLE_DEVICE_NAME     "Tree"
 
-#define BLE_UUID_BAUMHAUS_TREE_SERVICE          0x2001
-#define BLE_UUID_SET_LED_COLOR_CHARACTERISTIC   0x2002  // with write and write w/o response properties
+#define BLE_UUID_BAUMHAUS_TREE_SERVICE          0x4001
+#define BLE_UUID_SET_LED_COLOR_CHARACTERISTIC   0x4002  // with write and write w/o response properties
 
 typedef struct
 {
@@ -36,7 +38,9 @@ typedef struct
     ble_gatts_char_handles_t    characteristic_set_led_color_handles;
 } baumhaus_tree_service_t;
 
-#define APP_TIMER_PRESCALER             0
+#define APP_TIMER_PRESCALER             0                                           /**< Value of the RTC1 PRESCALER register. */
+#define APP_TIMER_MAX_TIMERS            2                                           /**< Maximum number of simultaneously created timers. */
+#define APP_TIMER_OP_QUEUE_SIZE         4                                           /**< Size of timer operation queues. */
 
 #define APP_ADV_INTERVAL                64                                          /**< The advertising interval (in units of 0.625 ms. This value corresponds to 40 ms). */
 #define APP_ADV_TIMEOUT_IN_SECONDS      180                                         /**< The advertising timeout (in units of seconds). */

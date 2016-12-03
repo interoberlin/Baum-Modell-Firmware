@@ -12,9 +12,8 @@ extern void on_characteristic_written(uint16_t uuid, uint8_t* data, uint8_t leng
 
 void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p_file_name)
 {
-    //printf("Error #%d. Restarting.\n", error_code);
-
-    // On assert, the system can only recover with a reset.
+    printf("Error %#x in %s, line %u\nRestarting...\n", (unsigned int) error_code, (char*) p_file_name, (unsigned int) line_num);
+    nrf_delay_us(1000);
     NVIC_SystemReset();
 }
 
@@ -35,8 +34,105 @@ void init_softdevice()
 }
 
 
-// defined below
-void ble_event_handler(ble_evt_t*);
+/**
+ * @brief Handler for all BLE events
+ */
+void ble_event_handler(ble_evt_t* p_ble_evt)
+{
+    static ble_gap_evt_auth_status_t m_auth_status;
+    ble_gap_enc_info_t *             p_enc_info;
+    ble_gatts_evt_write_t*           p_evt_write;
+
+    if (p_ble_evt == NULL)
+        return;
+
+    switch (p_ble_evt->header.evt_id)
+    {
+        case BLE_GAP_EVT_CONNECTED:
+            nrf_gpio_pin_clear(PIN_LED_ADVERTISING);
+            nrf_gpio_pin_set(PIN_LED_CONNECTED);
+            nrf_gpio_pin_clear(PIN_LED_DATA);
+
+            ble_connection_handle = p_ble_evt->evt.gap_evt.conn_handle;
+
+            //on_ble_connected();
+
+            break;
+
+        case BLE_GAP_EVT_DISCONNECTED:
+            nrf_gpio_pin_clear(PIN_LED_ADVERTISING);
+            nrf_gpio_pin_clear(PIN_LED_CONNECTED);
+            nrf_gpio_pin_clear(PIN_LED_DATA);
+
+            ble_connection_handle = BLE_CONN_HANDLE_INVALID;
+
+            on_ble_disconnected();
+
+            //start_advertising();
+            // TODO: Something's not working properly upon disconnect preventing reconnect
+            NVIC_SystemReset();
+
+            break;
+
+        case BLE_GAP_EVT_SEC_PARAMS_REQUEST:
+            sd_ble_gap_sec_params_reply(
+                ble_connection_handle,
+                BLE_GAP_SEC_STATUS_SUCCESS,
+                &ble_security_parameters
+                );
+            break;
+
+        case BLE_GATTS_EVT_WRITE:
+            nrf_gpio_pin_set(PIN_LED_DATA);
+
+            p_evt_write = &p_ble_evt->evt.gatts_evt.params.write;
+
+            if (p_evt_write->handle == tree_service.characteristic_set_led_color_handles.value_handle)
+            {
+                on_characteristic_written(tree_service.characteristic_set_led_color_uuid.uuid, p_evt_write->data, p_evt_write->len);
+            }
+            break;
+
+        case BLE_GATTS_EVT_SYS_ATTR_MISSING:
+            sd_ble_gatts_sys_attr_set(ble_connection_handle, NULL, 0);
+            break;
+
+        case BLE_GAP_EVT_AUTH_STATUS:
+            m_auth_status = p_ble_evt->evt.gap_evt.params.auth_status;
+            break;
+
+        case BLE_GAP_EVT_SEC_INFO_REQUEST:
+            p_enc_info = &m_auth_status.periph_keys.enc_info;
+            if (p_enc_info->div == p_ble_evt->evt.gap_evt.params.sec_info_request.div)
+            {
+                sd_ble_gap_sec_info_reply(ble_connection_handle, p_enc_info, NULL);
+            }
+            else
+            {
+                // No keys found for this device
+                sd_ble_gap_sec_info_reply(ble_connection_handle, NULL, NULL);
+            }
+            break;
+
+        case BLE_GAP_EVT_TIMEOUT:
+            if (p_ble_evt->evt.gap_evt.params.timeout.src == BLE_GAP_TIMEOUT_SRC_ADVERTISEMENT)
+            {
+                // Go to system-off mode (this function will not return; wakeup will cause a reset)
+                //err_code = sd_power_system_off();
+                NVIC_SystemReset();
+            }
+            break;
+/*
+        case BLE_EVT_TX_COMPLETE:
+            if (!ble_buffer_available)
+                tx_complete = true;
+            break;
+*/
+        default:
+            //printf("unimplemented event\n");
+            break;
+    }
+}
 
 
 /**
@@ -47,10 +143,14 @@ void init_ble_stack()
     ble_enable_params_t ble_enable_params;
     memset(&ble_enable_params, 0, sizeof(ble_enable_params));
     //ble_enable_params.gatts_enable_params.service_changed = 1;
+    uint32_t retval =
     sd_ble_enable(&ble_enable_params);
+    APP_ERROR_CHECK(retval);
 
     // Subscribe to all BLE events
-    softdevice_ble_evt_handler_set(ble_event_handler);
+    retval =
+            softdevice_ble_evt_handler_set(&ble_event_handler);
+    APP_ERROR_CHECK(retval);
 }
 
 
@@ -67,6 +167,7 @@ void init_gap()
      */
     BLE_GAP_CONN_SEC_MODE_SET_OPEN(&sec_mode);
 
+    uint32_t retval =
     sd_ble_gap_device_name_set(
         &sec_mode,
         (const uint8_t *) BLE_DEVICE_NAME,
@@ -83,6 +184,7 @@ void init_gap()
     gap_conn_params.slave_latency     = SLAVE_LATENCY;
     gap_conn_params.conn_sup_timeout  = CONN_SUP_TIMEOUT;
 
+    retval =
     sd_ble_gap_ppcp_set(&gap_conn_params);
 
     /*
@@ -90,7 +192,9 @@ void init_gap()
      */
     ble_gap_addr_t gap_address;
 
+    retval =
     sd_ble_gap_address_get(&gap_address);
+
 /*
     printf("Dis' your default MAC: %x:%x:%x:%x:%x:%x\n",
           gap_address.addr[5],
@@ -102,7 +206,10 @@ void init_gap()
     );
 */
     gap_address.addr_type = BLE_GAP_ADDR_TYPE_PUBLIC;
+
+    retval =
     sd_ble_gap_address_set(BLE_GAP_ADDR_CYCLE_MODE_NONE, &gap_address);
+
 //    gap_address.addr_type = BLE_GAP_ADDR_TYPE_RANDOM_PRIVATE_NON_RESOLVABLE;
 //    sd_ble_gap_address_set(BLE_GAP_ADDR_CYCLE_MODE_AUTO, &gap_address);
 /*
@@ -137,6 +244,7 @@ void init_services()
     tree_service.uuid.uuid = BLE_UUID_BAUMHAUS_TREE_SERVICE;
     tree_service.uuid.type = BLE_UUID_TYPE_BLE;
 
+    uint32_t retval =
     sd_ble_gatts_service_add(
         BLE_GATTS_SRVC_TYPE_PRIMARY,
         &tree_service.uuid,
@@ -185,12 +293,14 @@ void init_characteristic_set_led_color()
     gatt_attribute.init_offs    = 0;
     gatt_attribute.max_len      = 20;
 
+    uint32_t retval =
     sd_ble_gatts_characteristic_add(
         tree_service.service_handle,
         &characteristic_metadata,
         &gatt_attribute,
         &tree_service.characteristic_set_led_color_handles
         );
+    APP_ERROR_CHECK(retval);
 }
 
 
@@ -273,7 +383,9 @@ void connection_parameters_event_handler(ble_conn_params_evt_t * p_evt)
 {
     if(p_evt->evt_type == BLE_CONN_PARAMS_EVT_FAILED)
     {
-        sd_ble_gap_disconnect(ble_connection_handle, BLE_HCI_CONN_INTERVAL_UNACCEPTABLE);
+        uint32_t retval =
+                sd_ble_gap_disconnect(ble_connection_handle, BLE_HCI_CONN_INTERVAL_UNACCEPTABLE);
+        APP_ERROR_CHECK(retval);
     }
 }
 
@@ -284,6 +396,7 @@ void connection_parameters_event_handler(ble_conn_params_evt_t * p_evt)
 void connection_paramaters_error_handler(uint32_t nrf_error)
 {
     // TODO
+    //NVIC_SystemReset();
 }
 
 
@@ -294,6 +407,8 @@ void init_connection_parameters()
 {
     ble_conn_params_init_t cp_init;
 
+    APP_TIMER_INIT(APP_TIMER_PRESCALER, APP_TIMER_MAX_TIMERS, APP_TIMER_OP_QUEUE_SIZE, false);
+
     memset(&cp_init, 0, sizeof(cp_init));
 
     cp_init.p_conn_params                  = NULL;
@@ -301,7 +416,7 @@ void init_connection_parameters()
     cp_init.next_conn_params_update_delay  = NEXT_CONN_PARAMS_UPDATE_DELAY;
     cp_init.max_conn_params_update_count   = MAX_CONN_PARAMS_UPDATE_COUNT;
     cp_init.start_on_notify_cccd_handle    = BLE_GATT_HANDLE_INVALID;
-    cp_init.disconnect_on_fail             = false;
+    cp_init.disconnect_on_fail             = true;
     cp_init.evt_handler                    = connection_parameters_event_handler;
     cp_init.error_handler                  = connection_paramaters_error_handler;
 
@@ -327,107 +442,7 @@ void start_advertising()
 
     sd_ble_gap_adv_start(&adv_params);
 
-    // active low
-    nrf_gpio_pin_clear(PIN_LED_ADVERTISING);
-}
-
-
-/**
- * @brief Handler for all BLE events
- */
-void ble_event_handler(ble_evt_t* p_ble_evt)
-{
-    static ble_gap_evt_auth_status_t m_auth_status;
-    ble_gap_enc_info_t *             p_enc_info;
-    ble_gatts_evt_write_t*           p_evt_write;
-
-    switch (p_ble_evt->header.evt_id)
-    {
-        case BLE_GAP_EVT_CONNECTED:
-            // active low
-            nrf_gpio_pin_set(PIN_LED_ADVERTISING);
-            // active high
-            nrf_gpio_pin_set(PIN_LED_CONNECTED);
-
-            ble_connection_handle = p_ble_evt->evt.gap_evt.conn_handle;
-
-            on_ble_connected();
-
-            break;
-
-        case BLE_GAP_EVT_DISCONNECTED:
-            // active low
-            nrf_gpio_pin_clear(PIN_LED_ADVERTISING);
-            // active high
-            nrf_gpio_pin_clear(PIN_LED_CONNECTED);
-
-            ble_connection_handle = BLE_CONN_HANDLE_INVALID;
-
-            on_ble_disconnected();
-
-            start_advertising();
-
-            break;
-
-        case BLE_GAP_EVT_SEC_PARAMS_REQUEST:
-            sd_ble_gap_sec_params_reply(
-                ble_connection_handle,
-                BLE_GAP_SEC_STATUS_SUCCESS,
-                &ble_security_parameters
-                );
-            break;
-
-        case BLE_GATTS_EVT_WRITE:
-            p_evt_write = &p_ble_evt->evt.gatts_evt.params.write;
-
-            if (p_evt_write->handle == tree_service.characteristic_set_led_color_handles.value_handle)
-            {
-                on_characteristic_written(tree_service.characteristic_set_led_color_uuid.uuid, p_evt_write->data, p_evt_write->len);
-            }
-            break;
-
-        case BLE_GATTS_EVT_SYS_ATTR_MISSING:
-            sd_ble_gatts_sys_attr_set(ble_connection_handle, NULL, 0);
-            break;
-
-        case BLE_GAP_EVT_AUTH_STATUS:
-            m_auth_status = p_ble_evt->evt.gap_evt.params.auth_status;
-            break;
-
-        case BLE_GAP_EVT_SEC_INFO_REQUEST:
-            p_enc_info = &m_auth_status.periph_keys.enc_info;
-            if (p_enc_info->div == p_ble_evt->evt.gap_evt.params.sec_info_request.div)
-            {
-                sd_ble_gap_sec_info_reply(ble_connection_handle, p_enc_info, NULL);
-            }
-            else
-            {
-                // No keys found for this device
-                sd_ble_gap_sec_info_reply(ble_connection_handle, NULL, NULL);
-            }
-            break;
-
-        case BLE_GAP_EVT_TIMEOUT:
-            if (p_ble_evt->evt.gap_evt.params.timeout.src == BLE_GAP_TIMEOUT_SRC_ADVERTISEMENT)
-            {
-                nrf_gpio_pin_clear(PIN_LED_CONNECTED);
-
-                // Go to system-off mode (this function will not return; wakeup will cause a reset)
-                //err_code = sd_power_system_off();
-                NVIC_SystemReset();
-            }
-            break;
-/*
-        case BLE_EVT_TX_COMPLETE:
-            if (!ble_buffer_available)
-                tx_complete = true;
-            break;
-*/
-        default:
-            //printf("unimplemented event");
-            // No implementation needed.
-            break;
-    }
+    nrf_gpio_pin_set(PIN_LED_ADVERTISING);
 }
 
 
@@ -438,6 +453,7 @@ void ble_init()
 {
     nrf_gpio_cfg_output(PIN_LED_ADVERTISING);
     nrf_gpio_cfg_output(PIN_LED_CONNECTED);
+    nrf_gpio_cfg_output(PIN_LED_DATA);
 
     init_softdevice();
     init_ble_stack();
