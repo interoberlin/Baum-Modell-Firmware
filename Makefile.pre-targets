@@ -1,0 +1,78 @@
+
+#
+# nRF51 microcontroller project toolchain setup
+#
+# Author: Matthias Bock <mail@matthiasbock.net>
+# License: GNU GPLv3
+#
+
+#
+# Toolchain
+#
+TOOLCHAIN_PATH   = /usr/bin/
+TOOLCHAIN_PREFIX = arm-none-eabi
+AS      = $(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)-as
+CC      = $(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)-gcc
+LD      = $(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)-ld
+OBJCOPY = $(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)-objcopy
+OBJDUMP = $(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)-objdump
+SIZE    = $(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)-size
+GDB     = $(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)-gdb
+
+newlib  = /usr/lib/arm-none-eabi/newlib/libc.a
+
+#
+# C compiler and linker configuration
+#
+
+# colorify compiler output
+CC_COLORS = sed -e "s/\(warning:\)/\x1b[1;33m&\x1b[0m/" -e "s/\(error:\)/\x1b[91m&\x1b[0m/"
+LD_COLORS = sed -e "s/:[0-9]*:\([ 0-9a-zA-Z_\`\']*\)/:\x1b[1;91m\1\x1b[0m/"
+
+CFLAGS += -std=gnu99 -Wall -Wextra -g
+CFLAGS += -mcpu=cortex-m0 -mthumb -mabi=aapcs -mfloat-abi=soft
+CFLAGS += -ffreestanding
+
+# Keep every function in separate section.
+# This will allow linker to dump unused functions.
+CFLAGS += -ffunction-sections
+CFLAGS += -fdata-sections
+
+# do not use -fno-strict-aliasing, see Redmine-Ticket #1051
+CFLAGS += -fstrict-aliasing
+
+CFLAGS += -fno-builtin
+CFLAGS += --short-enums
+
+# optimize!
+CFLAGS += -O3
+
+CFLAGS += -I ./
+CFLAGS += -I $(PROJECT_ROOT)/
+CFLAGS += -I $(PROJECT_ROOT)/nordic/
+CFLAGS += -I $(PROJECT_ROOT)/nordic/arm/
+CFLAGS += -I $(PROJECT_ROOT)/nordic/sdk/nrf51822/Include
+CFLAGS += -I $(PROJECT_ROOT)/nordic/sdk/nrf51822/Include/
+CFLAGS += -I $(PROJECT_ROOT)/nordic/sdk/nrf51822/Include/app_common/
+CFLAGS += -I $(PROJECT_ROOT)/nordic/sdk/nrf51822/Include/ble/
+CFLAGS += -I $(PROJECT_ROOT)/nordic/sdk/nrf51822/Include/ble/ble_services/
+CFLAGS += -I $(PROJECT_ROOT)/nordic/sdk/nrf51822/Include/sd_common/
+CFLAGS += -I $(PROJECT_ROOT)/nordic/sdk/nrf51822/Include/s110/
+CFLAGS += -I $(PROJECT_ROOT)/sdk/
+CFLAGS += -I $(PROJECT_ROOT)/sk6812/
+
+LDFLAGS += -L /usr/lib/gcc/arm-none-eabi/4.8/armv6-m/
+LDFLAGS += -L /usr/lib/arm-none-eabi/newlib/armv6-m/
+LDFLAGS += -static
+LDFLAGS += -nostartfiles
+# -nostdlib
+LDFLAGS += --start-group
+LDFLAGS += -lc -lgcc
+
+# https://balau82.wordpress.com/2013/11/24/analyzing-c-source-files-dependencies-in-a-program/
+LDFLAGS += --cref
+
+# enable for semihosting: 
+#CFLAGS  += --specs=rdimon.specs
+#LDFLAGS += -lrdimon
+

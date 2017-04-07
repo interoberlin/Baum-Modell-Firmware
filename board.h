@@ -1,15 +1,28 @@
+/**
+ * Board-related routines
+ */
+
 #ifndef BOARD_H
 #define BOARD_H
 
-#include "sdk/nrfduino.h"
+#include <nrf_gpio.h>
+#include <pinout.h>
 
-#define PIN_LED_ADVERTISING NRFDUINO_PIN_IO0
-#define PIN_LED_CONNECTED   NRFDUINO_PIN_LED
-#define PIN_LED_DATA        NRFDUINO_PIN_IO1
-
-#define PIN_LEDSTRIP0       NRFDUINO_PIN_A0
-#define PIN_LEDSTRIP1       NRFDUINO_PIN_A1
-#define PIN_LEDSTRIP2       NRFDUINO_PIN_A2
-#define PIN_LEDSTRIP3       NRFDUINO_PIN_A3
+/**
+ * Initialize all GPIO pins
+ */
+#define init_gpio() \
+    nrf_gpio_cfg_output(PIN_LED_DATA1); \
+    nrf_gpio_cfg_output(PIN_LED_DATA2); \
+    nrf_gpio_cfg_output(PIN_LED_DATA3); \
+    nrf_gpio_cfg_output(PIN_LED_DATA4); \
+    \
+    nrf_gpio_cfg_output(PIN_ATX_ON); \
+    \
+    nrf_gpio_cfg_input(PIN_ATX_OK, NRF_GPIO_PIN_NOPULL); \
+    \
+    nrf_gpio_cfg_input(PIN_FUSE_OK, NRF_GPIO_PIN_NOPULL); \
+    \
+    nrf_gpio_cfg_input(PIN_CURRENT_SENSOR, NRF_GPIO_PIN_NOPULL);
 
 #endif // BOARD_H

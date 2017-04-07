@@ -1,0 +1,62 @@
+
+#
+# Additional generic targets for nRF51 projects
+#
+# Author: Matthias Bock <mail@matthiasbock.net>
+# License: GNU GPLv3
+#
+
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@ 2>&1 | $(CC_COLORS)
+
+%.o: %s
+	$(CC) $(CFLAGS) -c $< -o $@
+
+%.hex: %.elf
+	$(OBJCOPY) -Oihex $< $@
+
+%.bin: %.elf
+	$(OBJCOPY) -Obinary $< $@
+
+%.text: %.elf
+	$(OBJCOPY) -O binary -j .text $< $@
+
+%.data: %.elf
+	$(OBJCOPY) -O binary -j .data $< $@
+
+%.rodata: %.elf
+	$(OBJCOPY) -O binary -j .rodata $< $@
+
+
+debug: $(DEBUG_BINARY)
+	$(GDB) -q $(GDB_ARGS) $< \
+		-ex "target remote localhost:3333" \
+		-ex="load" \
+		-ex="monitor reset halt" \
+		-ex "continue"
+
+clean:
+	rm -f *.o $(PROJECT_ROOT)/*/*.o nordic/sdk/nrf51822/Source/*/*.o *.out *.bin *.elf *.hex *.map *.text *.data *.rodata
+
+
+#
+# Flash the SoftDevice HEX-file into the chip
+#
+
+# filename of used softdevice (full path)
+SOFTDEVICE = $(PROJECT_ROOT)/nordic/softdevice/s110_nrf51822_7.3.0_softdevice.hex
+
+.PHONY: softdevice
+softdevice:
+	$(GDB) -q $(SOFTDEVICE) \
+		-ex "target remote localhost:3333" \
+		-ex "load"
+
+#
+# include OpenOCD debugger configuration and target
+#
+OPENOCD_CFG_DIR = $(PROJECT_ROOT)/sdk/debug/
+
+.PHONY: debug
+include $(PROJECT_ROOT)/sdk/debug/Makefile
+

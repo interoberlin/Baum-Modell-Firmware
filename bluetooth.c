@@ -39,9 +39,10 @@ void init_softdevice()
  */
 void ble_event_handler(ble_evt_t* p_ble_evt)
 {
-    static ble_gap_evt_auth_status_t m_auth_status;
-    ble_gap_enc_info_t *             p_enc_info;
-    ble_gatts_evt_write_t*           p_evt_write;
+    static ble_gap_evt_auth_status_t   m_auth_status;
+    ble_gap_enc_info_t*         p_enc_info;
+    ble_gatts_evt_write_t*      p_evt_write;
+    uint32_t                    retval;
 
     if (p_ble_evt == NULL)
         return;
@@ -66,7 +67,7 @@ void ble_event_handler(ble_evt_t* p_ble_evt)
 
             ble_connection_handle = BLE_CONN_HANDLE_INVALID;
 
-            on_ble_disconnected();
+            //on_ble_disconnected();
 
             //start_advertising();
             // TODO: Something's not working properly upon disconnect preventing reconnect
@@ -75,11 +76,40 @@ void ble_event_handler(ble_evt_t* p_ble_evt)
             break;
 
         case BLE_GAP_EVT_SEC_PARAMS_REQUEST:
-            sd_ble_gap_sec_params_reply(
-                ble_connection_handle,
-                BLE_GAP_SEC_STATUS_SUCCESS,
-                &ble_security_parameters
-                );
+            retval =
+                sd_ble_gap_sec_params_reply(
+                    ble_connection_handle,
+                    BLE_GAP_SEC_STATUS_SUCCESS,
+                    &ble_security_parameters
+                    );
+            APP_ERROR_CHECK(retval);
+            break;
+
+        case BLE_GATTS_EVT_SYS_ATTR_MISSING:
+            retval =
+                    sd_ble_gatts_sys_attr_set(ble_connection_handle, NULL, 0);
+            APP_ERROR_CHECK(retval);
+            break;
+
+        case BLE_GAP_EVT_AUTH_STATUS:
+            m_auth_status = p_ble_evt->evt.gap_evt.params.auth_status;
+            break;
+
+        case BLE_GAP_EVT_SEC_INFO_REQUEST:
+            p_enc_info = &m_auth_status.periph_keys.enc_info;
+            if (p_enc_info->div == p_ble_evt->evt.gap_evt.params.sec_info_request.div)
+            {
+                retval =
+                        sd_ble_gap_sec_info_reply(ble_connection_handle, p_enc_info, NULL);
+                APP_ERROR_CHECK(retval);
+            }
+            else
+            {
+                // No keys found for this device
+                retval =
+                        sd_ble_gap_sec_info_reply(ble_connection_handle, NULL, NULL);
+                APP_ERROR_CHECK(retval);
+            }
             break;
 
         case BLE_GATTS_EVT_WRITE:
@@ -93,34 +123,13 @@ void ble_event_handler(ble_evt_t* p_ble_evt)
             }
             break;
 
-        case BLE_GATTS_EVT_SYS_ATTR_MISSING:
-            sd_ble_gatts_sys_attr_set(ble_connection_handle, NULL, 0);
-            break;
-
-        case BLE_GAP_EVT_AUTH_STATUS:
-            m_auth_status = p_ble_evt->evt.gap_evt.params.auth_status;
-            break;
-
-        case BLE_GAP_EVT_SEC_INFO_REQUEST:
-            p_enc_info = &m_auth_status.periph_keys.enc_info;
-            if (p_enc_info->div == p_ble_evt->evt.gap_evt.params.sec_info_request.div)
-            {
-                sd_ble_gap_sec_info_reply(ble_connection_handle, p_enc_info, NULL);
-            }
-            else
-            {
-                // No keys found for this device
-                sd_ble_gap_sec_info_reply(ble_connection_handle, NULL, NULL);
-            }
-            break;
-
         case BLE_GAP_EVT_TIMEOUT:
             if (p_ble_evt->evt.gap_evt.params.timeout.src == BLE_GAP_TIMEOUT_SRC_ADVERTISEMENT)
             {
                 // Go to system-off mode (this function will not return; wakeup will cause a reset)
                 //err_code = sd_power_system_off();
-                NVIC_SystemReset();
             }
+            NVIC_SystemReset();
             break;
 /*
         case BLE_EVT_TX_COMPLETE:
@@ -144,12 +153,12 @@ void init_ble_stack()
     memset(&ble_enable_params, 0, sizeof(ble_enable_params));
     //ble_enable_params.gatts_enable_params.service_changed = 1;
     uint32_t retval =
-    sd_ble_enable(&ble_enable_params);
+            sd_ble_enable(&ble_enable_params);
     APP_ERROR_CHECK(retval);
 
     // Subscribe to all BLE events
     retval =
-            softdevice_ble_evt_handler_set(&ble_event_handler);
+            softdevice_ble_evt_handler_set(ble_event_handler);
     APP_ERROR_CHECK(retval);
 }
 
@@ -160,23 +169,25 @@ void init_ble_stack()
 void init_gap()
 {
     ble_gap_conn_params_t   gap_conn_params;
-    ble_gap_conn_sec_mode_t sec_mode;
+    ble_gap_conn_sec_mode_t security_mode;
 
     /*
      * Set security mode
      */
-    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&sec_mode);
+    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&security_mode);
 
     uint32_t retval =
-    sd_ble_gap_device_name_set(
-        &sec_mode,
-        (const uint8_t *) BLE_DEVICE_NAME,
-        strlen(BLE_DEVICE_NAME)
-        );
+        sd_ble_gap_device_name_set(
+            &security_mode,
+            (const uint8_t*) BLE_DEVICE_NAME,
+            strlen(BLE_DEVICE_NAME)
+            );
+    APP_ERROR_CHECK(retval);
 
     /*
      * Set connection parameters
      */
+
     memset(&gap_conn_params, 0, sizeof(gap_conn_params));
 
     gap_conn_params.min_conn_interval = MIN_CONN_INTERVAL;
@@ -185,7 +196,8 @@ void init_gap()
     gap_conn_params.conn_sup_timeout  = CONN_SUP_TIMEOUT;
 
     retval =
-    sd_ble_gap_ppcp_set(&gap_conn_params);
+            sd_ble_gap_ppcp_set(&gap_conn_params);
+    APP_ERROR_CHECK(retval);
 
     /*
      * Change MAC address, if necessary
@@ -193,7 +205,8 @@ void init_gap()
     ble_gap_addr_t gap_address;
 
     retval =
-    sd_ble_gap_address_get(&gap_address);
+            sd_ble_gap_address_get(&gap_address);
+    APP_ERROR_CHECK(retval);
 
 /*
     printf("Dis' your default MAC: %x:%x:%x:%x:%x:%x\n",
@@ -208,7 +221,8 @@ void init_gap()
     gap_address.addr_type = BLE_GAP_ADDR_TYPE_PUBLIC;
 
     retval =
-    sd_ble_gap_address_set(BLE_GAP_ADDR_CYCLE_MODE_NONE, &gap_address);
+            sd_ble_gap_address_set(BLE_GAP_ADDR_CYCLE_MODE_NONE, &gap_address);
+    APP_ERROR_CHECK(retval);
 
 //    gap_address.addr_type = BLE_GAP_ADDR_TYPE_RANDOM_PRIVATE_NON_RESOLVABLE;
 //    sd_ble_gap_address_set(BLE_GAP_ADDR_CYCLE_MODE_AUTO, &gap_address);
@@ -245,11 +259,12 @@ void init_services()
     tree_service.uuid.type = BLE_UUID_TYPE_BLE;
 
     uint32_t retval =
-    sd_ble_gatts_service_add(
-        BLE_GATTS_SRVC_TYPE_PRIMARY,
-        &tree_service.uuid,
-        &tree_service.service_handle
-        );
+        sd_ble_gatts_service_add(
+            BLE_GATTS_SRVC_TYPE_PRIMARY,
+            &tree_service.uuid,
+            &tree_service.service_handle
+            );
+    APP_ERROR_CHECK(retval);
 }
 
 
@@ -294,12 +309,12 @@ void init_characteristic_set_led_color()
     gatt_attribute.max_len      = 20;
 
     uint32_t retval =
-    sd_ble_gatts_characteristic_add(
-        tree_service.service_handle,
-        &characteristic_metadata,
-        &gatt_attribute,
-        &tree_service.characteristic_set_led_color_handles
-        );
+        sd_ble_gatts_characteristic_add(
+            tree_service.service_handle,
+            &characteristic_metadata,
+            &gatt_attribute,
+            &tree_service.characteristic_set_led_color_handles
+            );
     APP_ERROR_CHECK(retval);
 }
 
@@ -338,7 +353,9 @@ void init_advertising(void)
     scan_response_data.uuids_complete.uuid_cnt = sizeof(adv_uuids) / sizeof(adv_uuids[0]);
     scan_response_data.uuids_complete.p_uuids  = adv_uuids;
 
-    ble_advdata_set(&advertising_data, &scan_response_data);
+    uint32_t retval =
+            ble_advdata_set(&advertising_data, &scan_response_data);
+    APP_ERROR_CHECK(retval);
 }
 
 
@@ -356,8 +373,9 @@ void send_notifications()
     hvx_params.p_len  = "\3";
     hvx_params.type   = BLE_GATT_HVX_NOTIFICATION;
 
-    //uint32_t err_code =
-    sd_ble_gatts_hvx(ble_connection_handle, &hvx_params);
+    uint32_t retval =
+            sd_ble_gatts_hvx(ble_connection_handle, &hvx_params);
+    APP_ERROR_CHECK(retval);
 }
 
 
@@ -407,8 +425,6 @@ void init_connection_parameters()
 {
     ble_conn_params_init_t cp_init;
 
-    APP_TIMER_INIT(APP_TIMER_PRESCALER, APP_TIMER_MAX_TIMERS, APP_TIMER_OP_QUEUE_SIZE, false);
-
     memset(&cp_init, 0, sizeof(cp_init));
 
     cp_init.p_conn_params                  = NULL;
@@ -420,7 +436,9 @@ void init_connection_parameters()
     cp_init.evt_handler                    = connection_parameters_event_handler;
     cp_init.error_handler                  = connection_paramaters_error_handler;
 
-    ble_conn_params_init(&cp_init);
+    uint32_t retval =
+            ble_conn_params_init(&cp_init);
+    APP_ERROR_CHECK(retval);
 }
 
 
@@ -454,6 +472,8 @@ void ble_init()
     nrf_gpio_cfg_output(PIN_LED_ADVERTISING);
     nrf_gpio_cfg_output(PIN_LED_CONNECTED);
     nrf_gpio_cfg_output(PIN_LED_DATA);
+
+    APP_TIMER_INIT(APP_TIMER_PRESCALER, APP_TIMER_MAX_TIMERS, APP_TIMER_OP_QUEUE_SIZE, false);
 
     init_softdevice();
     init_ble_stack();

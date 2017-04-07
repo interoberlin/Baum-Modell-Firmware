@@ -1,26 +1,26 @@
 /**
- * Baumhaus tree demo firmware
- *
- * by Thee Vanichangkul, Matthias Bock and Long Pham
+ * Baumhaus tree firmware
  */
 
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "nrf51.h"
-#include "nrf_delay.h"
-#include "nrf_gpio.h"
+#include <nrf51.h>
+#include <nrf_delay.h>
+#include <nrf_gpio.h>
 
-#include "led.h"
-#include "sdk/nrfduino.h"
-#include "sdk/clock.h"
+#include <led.h>
+//#include <clock.h>
+
+#include <pinout.h>
+#include <board.h>
 
 // LED strips
 #define NUM_STRIPS      1
-#define TOTAL_NUM_LEDS  5
+#define TOTAL_NUM_LEDS  210
 neopixel_strip_t strip[NUM_STRIPS];
-const uint8_t strip_at_pin[NUM_STRIPS]   = {NRFDUINO_PIN_A0}; //, 28, 2, 0};
-const uint8_t leds_per_strip[NUM_STRIPS] = {5};
+const uint8_t strip_at_pin[NUM_STRIPS]   = {PIN_LED_DATA1}; //, 28, 2, 0};
+const uint8_t leds_per_strip[NUM_STRIPS] = {TOTAL_NUM_LEDS};
 volatile bool strip_changed[NUM_STRIPS]  = {false}; //, false, false, false};
 
 // get the number of the strip from LED index
@@ -117,7 +117,7 @@ void TIMER2_Handler()
         // clear event
         NRF_TIMER2->EVENTS_COMPARE[0] = 0;
 
-        nrf_gpio_pin_set(NRFDUINO_PIN_LED);
+        //nrf_gpio_pin_set(NRFDUINO_PIN_LED);
 
         // update all the strips
         // if they have changed
@@ -132,23 +132,48 @@ void TIMER2_Handler()
 
         calculate_new_led_values();
 
-        nrf_gpio_pin_clear(NRFDUINO_PIN_LED);
+        //nrf_gpio_pin_clear(NRFDUINO_PIN_LED);
     }
 }
 
 
 /**
- * @brief Firmware entry point
+ * Main program
  */
 int main(void)
 {
-    nrf_gpio_cfg_output(NRFDUINO_PIN_LED);
-    nrf_gpio_pin_set(NRFDUINO_PIN_LED);
-    nrf_delay_ms(100);
+    init_gpio();
+
+    while (true)
+    {
+        nrf_gpio_pin_set(PIN_ATX_ON);
+        nrf_delay_ms(1500);
+        nrf_gpio_pin_clear(PIN_ATX_ON);
+        nrf_delay_ms(1500);
+    }
+}
+
+/*
 
     init_ledstrips();
 
     //setup_fps_timer();
+
+    // all on
+    while (true)
+    {
+        nrf_gpio_pin_set(NRFDUINO_PIN_LED);
+
+        uint8_t i = 255;
+        for (uint8_t j=0; j<TOTAL_NUM_LEDS; j++)
+        {
+            neopixel_set_color_and_show(&(strip[0]), j, i, i, i);
+        }
+
+        nrf_delay_ms(1000);
+        nrf_gpio_pin_clear(NRFDUINO_PIN_LED);
+        nrf_delay_ms(1000);
+    }
 
     // infinite loop
 	while(true)
@@ -177,3 +202,4 @@ int main(void)
 	    }
 	}
 }
+*/

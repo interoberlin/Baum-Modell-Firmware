@@ -23,7 +23,12 @@
 #include <app_util_platform.h>
 #include <app_timer.h>
 
-#include "board.h"
+#include <board.h>
+
+#define PIN_LED_ADVERTISING 8 
+#define PIN_LED_CONNECTED   9
+#define PIN_LED_DATA        10
+
 
 #define BLE_DEVICE_NAME     "Tree"
 
