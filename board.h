@@ -25,4 +25,10 @@
     \
     nrf_gpio_cfg_input(PIN_CURRENT_SENSOR, NRF_GPIO_PIN_NOPULL);
 
+/*
+ * Switch the ATX power supply on/off
+ */
+#define powersupply_enable()    nrf_gpio_pin_set(PIN_ATX_ON);
+#define powersupply_disable()   nrf_gpio_pin_clear(PIN_ATX_ON);
+
 #endif // BOARD_H

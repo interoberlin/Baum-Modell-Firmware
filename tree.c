@@ -19,7 +19,7 @@
 #define NUM_STRIPS      1
 #define TOTAL_NUM_LEDS  210
 neopixel_strip_t strip[NUM_STRIPS];
-const uint8_t strip_at_pin[NUM_STRIPS]   = {PIN_LED_DATA1}; //, 28, 2, 0};
+const uint8_t strip_at_pin[NUM_STRIPS]   = {PIN_LED_DATA2};
 const uint8_t leds_per_strip[NUM_STRIPS] = {TOTAL_NUM_LEDS};
 volatile bool strip_changed[NUM_STRIPS]  = {false}; //, false, false, false};
 
@@ -143,63 +143,63 @@ void TIMER2_Handler()
 int main(void)
 {
     init_gpio();
-
-    while (true)
-    {
-        nrf_gpio_pin_set(PIN_ATX_ON);
-        nrf_delay_ms(1500);
-        nrf_gpio_pin_clear(PIN_ATX_ON);
-        nrf_delay_ms(1500);
-    }
-}
-
-/*
-
     init_ledstrips();
-
-    //setup_fps_timer();
 
     // all on
     while (true)
     {
-        nrf_gpio_pin_set(NRFDUINO_PIN_LED);
+        powersupply_enable();
 
-        uint8_t i = 255;
-        for (uint8_t j=0; j<TOTAL_NUM_LEDS; j++)
+        uint8_t value = 255;
+        for (uint8_t led=0; led<TOTAL_NUM_LEDS; led++)
         {
-            neopixel_set_color_and_show(&(strip[0]), j, i, i, i);
+            neopixel_set_color_and_show(&(strip[0]), led, value, value, value);
         }
+        nrf_delay_ms(2000);
 
-        nrf_delay_ms(1000);
-        nrf_gpio_pin_clear(NRFDUINO_PIN_LED);
-        nrf_delay_ms(1000);
+        value = 0;
+        for (uint8_t led=0; led<TOTAL_NUM_LEDS; led++)
+        {
+            neopixel_set_color_and_show(&(strip[0]), led, value, value, value);
+        }
+        nrf_delay_ms(2000);
+
+        powersupply_disable();
+        nrf_delay_ms(2000);
     }
 
+/*
     // infinite loop
-	while(true)
-	{
-	    for (uint8_t j=0; j<TOTAL_NUM_LEDS; j++)
-	    {
-	        nrf_gpio_pin_set(NRFDUINO_PIN_LED);
+     while(true)
+     {
+         uint8_t value;
 
-	        uint8_t i;
-	        for (i=0; i<255; i++)
-	        {
-	            neopixel_set_color_and_show(&(strip[0]), j, i, i, i);
-	            nrf_delay_ms(3);
-	        }
+         // up
+        for (value=0; value<255; value++)
+        {
+            // set all LEDs
+             for (uint8_t led=0; led<TOTAL_NUM_LEDS; led++)
+                 neopixel_set_color(&strip[0], led, value, value, value);
 
-	        nrf_gpio_pin_clear(NRFDUINO_PIN_LED);
+            // show
+            neopixel_show(&strip[0]);
+            // wait
+            nrf_delay_ms(3);
+        }
 
-	        for (i=255; i>0; i--)
-	        {
-	            neopixel_set_color_and_show(&(strip[0]), j, i, i, i);
-	            nrf_delay_ms(3);
-	        }
+        // down
+        for (value=255; value>0; value--)
+        {
+            // set all LEDs
+             for (uint8_t led=0; led<TOTAL_NUM_LEDS; led++)
+                 neopixel_set_color(&strip[0], led, value, value, value);
 
-	        // completely off
-	        neopixel_set_color_and_show(&(strip[0]), j, 0, 0, 0);
-	    }
-	}
-}
+            // show
+            neopixel_show(&strip[0]);
+            // wait
+            nrf_delay_ms(3);
+        }
+     }
 */
+    //setup_fps_timer();
+}
