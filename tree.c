@@ -16,32 +16,29 @@
 #include <board.h>
 
 // LED strips
-#define NUM_STRIPS      1
-#define TOTAL_NUM_LEDS  210
+#define NUM_STRIPS      4
+#define LEDS_PER_STRIP  200
+#define TOTAL_NUM_LEDS  (NUM_STRIPS*LEDS_PER_STRIP)
 neopixel_strip_t strip[NUM_STRIPS];
-const uint8_t strip_at_pin[NUM_STRIPS]   = {PIN_LED_DATA2};
-const uint8_t leds_per_strip[NUM_STRIPS] = {TOTAL_NUM_LEDS};
-volatile bool strip_changed[NUM_STRIPS]  = {false}; //, false, false, false};
-
-// get the number of the strip from LED index
-const uint8_t led_to_strip[TOTAL_NUM_LEDS]          = {1, 1, 1, 1, 1};
-const uint8_t led_index_on_strip[TOTAL_NUM_LEDS]    = {0, 1, 2, 3, 4};
-
+const uint8_t strip_at_pin[NUM_STRIPS]   = {PIN_LED_DATA1, PIN_LED_DATA2, PIN_LED_DATA3, PIN_LED_DATA4};
+const uint8_t leds_per_strip[NUM_STRIPS] = {LEDS_PER_STRIP, LEDS_PER_STRIP, LEDS_PER_STRIP, LEDS_PER_STRIP};
+volatile bool strip_changed[NUM_STRIPS]  = {false, false, false, false};
 
 // workaround:
 // static memory allocation
 // because malloc is (currently) not working
-uint8_t led_memory[TOTAL_NUM_LEDS * 3];
+uint8_t led_memory[NUM_STRIPS*LEDS_PER_STRIP*3];
 
 /**
  * @brief Initializes all LED strips
  */
 void init_ledstrips()
 {
-    strip[0].leds = led_memory;
-
+    uint8_t *memptr = led_memory;
     for (int strip_num=0; strip_num<NUM_STRIPS; strip_num++)
     {
+        strip[strip_num].leds = memptr;
+        memptr = memptr + LEDS_PER_STRIP*3;
         neopixel_init(&strip[strip_num], strip_at_pin[strip_num], leds_per_strip[strip_num]);
         // unnecessary, filled with zeroes by startup script anyways
         //neopixel_clear(&strip[strip_num]);
@@ -55,7 +52,7 @@ void calculate_new_led_values()
 {
     uint8_t current_strip = 0;
 
-    for (uint8_t led=0; led<TOTAL_NUM_LEDS; led++)
+    for (uint32_t led=0; led<TOTAL_NUM_LEDS; led++)
     {
         uint8_t warmwhite = 0, coldwhite = 0, amber = 0;
 /*
@@ -145,61 +142,64 @@ int main(void)
     init_gpio();
     init_ledstrips();
 
+    powersupply_enable();
+
+/*
+works on nRFduino...
+
     // all on
     while (true)
     {
-        powersupply_enable();
-
-        uint8_t value = 255;
+        uint8_t value = 30;
         for (uint8_t led=0; led<TOTAL_NUM_LEDS; led++)
-        {
-            neopixel_set_color_and_show(&(strip[0]), led, value, value, value);
-        }
+            neopixel_set_color(&strip[0], led, value, value, value);
+        neopixel_show(&strip[0]);
         nrf_delay_ms(2000);
 
         value = 0;
         for (uint8_t led=0; led<TOTAL_NUM_LEDS; led++)
-        {
-            neopixel_set_color_and_show(&(strip[0]), led, value, value, value);
-        }
-        nrf_delay_ms(2000);
-
-        powersupply_disable();
+            neopixel_set_color(&strip[0], led, value, value, value);
+        neopixel_show(&strip[0]);
         nrf_delay_ms(2000);
     }
+*/
 
-/*
     // infinite loop
      while(true)
      {
-         uint8_t value;
+        uint8_t value, led, s;
 
-         // up
-        for (value=0; value<255; value++)
+        // up
+        for (value=0; value<60; value++)
         {
             // set all LEDs
-             for (uint8_t led=0; led<TOTAL_NUM_LEDS; led++)
-                 neopixel_set_color(&strip[0], led, value, value, value);
+             for (led=0; led<LEDS_PER_STRIP; led++)
+                 for (s=0; s<NUM_STRIPS; s++)
+                    neopixel_set_color(&strip[s], led, value, value, value);
 
             // show
-            neopixel_show(&strip[0]);
+            for (s=0; s<NUM_STRIPS; s++)
+                neopixel_show(&strip[s]);
             // wait
             nrf_delay_ms(3);
         }
 
         // down
-        for (value=255; value>0; value--)
+        for (value=60; value>0; value--)
         {
+
             // set all LEDs
-             for (uint8_t led=0; led<TOTAL_NUM_LEDS; led++)
-                 neopixel_set_color(&strip[0], led, value, value, value);
+             for (led=0; led<LEDS_PER_STRIP; led++)
+                 for (s=0; s<NUM_STRIPS; s++)
+                    neopixel_set_color(&strip[s], led, value, value, value);
 
             // show
-            neopixel_show(&strip[0]);
+            for (s=0; s<NUM_STRIPS; s++)
+                neopixel_show(&strip[s]);
             // wait
             nrf_delay_ms(3);
         }
      }
-*/
+
     //setup_fps_timer();
 }
