@@ -15,6 +15,9 @@ CFLAGS += -DDEBUG_NRF_USER
 CFLAGS += -DBLE_STACK_SUPPORT_REQD
 CFLAGS += -DS110
 
+# disable for release version:
+CFLAGS += -DBOARD_NRFDUINO
+
 # TODO: auto-detect chip revision
 CHIP_REVISION = aa
 
@@ -40,22 +43,21 @@ DEBUG_BINARY = tree.elf
 # Build targets
 #
 
-all: tree.elf test_ble.elf
+all: main.elf test_ble.elf
 
-tree.elf: \
+main.elf: \
 	sdk/nrf51_startup.o \
 	nordic/nrf_delay.o \
-	sk6812/led.o \
-	tree.o
-		$(LD) $(LDFLAGS) -T $(LINKER_SCRIPT_BLANK) $^ -o $@ -Map tree.map
+	leds/sk6812.o \
+	main.o
+		$(LD) $(LDFLAGS) -T $(LINKER_SCRIPT_BLANK) $^ -o $@ -Map main.map
 
 test_ble.elf: \
 	sdk/nrf51_startup.o \
 	$(SOFTDEVICE_DEPENDENCIES) \
-	bluetooth.o \
+	bluetooth/bluetooth.o \
 	test_ble.o
 		$(LD) $(LDFLAGS) -T $(LINKER_SCRIPT_SOFTDEVICE) $^ -o $@ -Map test_ble.map
 
 
 include Makefile.post-targets
-

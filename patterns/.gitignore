@@ -1,1 +1,8 @@
+# Adafruit examples
 *.zip
+sketch_*
+
+# generated files
+sine_table.c
+sine_table.h
+

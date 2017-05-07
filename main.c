@@ -9,11 +9,15 @@
 #include <nrf_delay.h>
 #include <nrf_gpio.h>
 
-#include <led.h>
+#include <sk6812.h>
 //#include <clock.h>
 
 #include <pinout.h>
 #include <board.h>
+
+#ifdef BOARD_NRFDUINO
+#include <nrfduino.h>
+#endif
 
 // LED strips
 #define NUM_STRIPS      4
@@ -24,9 +28,8 @@ const uint8_t strip_at_pin[NUM_STRIPS]   = {PIN_LED_DATA1, PIN_LED_DATA2, PIN_LE
 const uint8_t leds_per_strip[NUM_STRIPS] = {LEDS_PER_STRIP, LEDS_PER_STRIP, LEDS_PER_STRIP, LEDS_PER_STRIP};
 volatile bool strip_changed[NUM_STRIPS]  = {false, false, false, false};
 
-// workaround:
-// static memory allocation
-// because malloc is (currently) not working
+// static memory allocation for LEDs
+// to avoid the use of malloc
 uint8_t led_memory[NUM_STRIPS*LEDS_PER_STRIP*3];
 
 /**
@@ -67,9 +70,24 @@ void calculate_new_led_values()
 }
 
 /**
+ * @brief If LEDs on a strip memory have changed, update the strip
+ */
+inline void update_leds()
+{
+    for (uint8_t i=0; i<NUM_STRIPS; i++)
+    {
+        if (strip_changed[i])
+        {
+            neopixel_show(&strip[i]);
+            strip_changed[i] = false;
+        }
+    }
+}
+
+/**
  * @brief Configures the FPS timer
  */
-void setup_fps_timer(void)
+void init_timer()
 {
     // Set the timer to Counter Mode
     NRF_TIMER2->MODE = TIMER_MODE_MODE_Timer;
@@ -114,22 +132,24 @@ void TIMER2_Handler()
         // clear event
         NRF_TIMER2->EVENTS_COMPARE[0] = 0;
 
-        //nrf_gpio_pin_set(NRFDUINO_PIN_LED);
+        // make sure, only one instance is running at a time
+        static volatile bool busy = false;
+        if (busy)
+            return;
+        busy = true;
 
-        // update all the strips
-        // if they have changed
-        for (int i=0; i<NUM_STRIPS; i++)
-        {
-            if (strip_changed[i])
-            {
-                neopixel_show(&strip[i]);
-                strip_changed[i] = false;
-            }
-        }
+        // toggle LED for debugging
+        #ifdef BOARD_NRFDUINO
+        nrf_gpio_pin_toggle(NRFDUINO_PIN_LED);
+        #endif
 
         calculate_new_led_values();
 
-        //nrf_gpio_pin_clear(NRFDUINO_PIN_LED);
+        // update all the strips
+        // if they have changed
+        update_leds();
+
+        busy = false;
     }
 }
 
@@ -141,8 +161,9 @@ int main(void)
 {
     init_gpio();
     init_ledstrips();
+    init_timer();
 
-    powersupply_enable();
+    atx_powersupply_enable();
 
 /*
 works on nRFduino...
@@ -164,12 +185,12 @@ works on nRFduino...
     }
 */
 
-    // infinite loop
-     while(true)
-     {
+    // infinite loop: all LEDs: brightness up, brightness down
+    while(true)
+    {
         uint8_t value, led, s;
 
-        // up
+        // brightness up
         for (value=0; value<60; value++)
         {
             // set all LEDs
@@ -184,7 +205,7 @@ works on nRFduino...
             nrf_delay_ms(3);
         }
 
-        // down
+        // brightness down
         for (value=60; value>0; value--)
         {
 
@@ -199,7 +220,5 @@ works on nRFduino...
             // wait
             nrf_delay_ms(3);
         }
-     }
-
-    //setup_fps_timer();
+    }
 }

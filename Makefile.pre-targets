@@ -49,6 +49,10 @@ CFLAGS += -O3
 
 CFLAGS += -I ./
 CFLAGS += -I $(PROJECT_ROOT)/
+CFLAGS += -I $(PROJECT_ROOT)/bluetooth/
+CFLAGS += -I $(PROJECT_ROOT)/bsp/
+CFLAGS += -I $(PROJECT_ROOT)/leds/
+CFLAGS += -I $(PROJECT_ROOT)/patterns/
 CFLAGS += -I $(PROJECT_ROOT)/nordic/
 CFLAGS += -I $(PROJECT_ROOT)/nordic/arm/
 CFLAGS += -I $(PROJECT_ROOT)/nordic/sdk/nrf51822/Include
@@ -59,7 +63,6 @@ CFLAGS += -I $(PROJECT_ROOT)/nordic/sdk/nrf51822/Include/ble/ble_services/
 CFLAGS += -I $(PROJECT_ROOT)/nordic/sdk/nrf51822/Include/sd_common/
 CFLAGS += -I $(PROJECT_ROOT)/nordic/sdk/nrf51822/Include/s110/
 CFLAGS += -I $(PROJECT_ROOT)/sdk/
-CFLAGS += -I $(PROJECT_ROOT)/sk6812/
 
 LDFLAGS += -L /usr/lib/gcc/arm-none-eabi/4.8/armv6-m/
 LDFLAGS += -L /usr/lib/arm-none-eabi/newlib/armv6-m/
