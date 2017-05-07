@@ -42,13 +42,17 @@ void init_ledstrips()
     }
 }
 
-inline bool convert_led_addressing(
-    uint8_t led_column,
+inline bool convert_led_address(
     uint16_t abstract_led_index,
     uint8_t *strip_index,
     uint16_t *led_index
     )
 {
+    // highest nibble selects column
+    uint8_t led_column = abstract_led_index >> 12;
+    // lower three nibbles select individual LED
+    abstract_led_index &= 0x0FFF;
+
     if (led_column == LED_COLUMN_LEFT)
     {
         if (abstract_led_index < LED_COUNT_BOTTOM_LEFT)
@@ -81,12 +85,12 @@ inline bool convert_led_addressing(
     return false; // invalid column or led index
 }
 
-void set_led(uint8_t led_column, uint16_t abstract_led_index, uint8_t warmwhite, uint8_t coldwhite, uint8_t amber)
+void set_led(uint16_t abstract_led_index, uint8_t warmwhite, uint8_t coldwhite, uint8_t amber)
 {
     uint8_t strip_index = 0;
     uint16_t led_index = 0;
 
-    if (!convert_led_addressing(led_column, abstract_led_index, &strip_index, &led_index))
+    if (!convert_led_address(abstract_led_index, &strip_index, &led_index))
         return;
 
     neopixel_set_color(&strip[strip_index], led_index, warmwhite, coldwhite, amber);

@@ -24,7 +24,7 @@ void init_ledstrips();
 /**
  * @brief Set the value of a specific LED
  */
-void set_led(uint8_t, uint16_t, uint8_t, uint8_t, uint8_t);
+void set_led(uint16_t, uint8_t, uint8_t, uint8_t);
 
 /**
  * @brief Output LED values from RAM to LEDs

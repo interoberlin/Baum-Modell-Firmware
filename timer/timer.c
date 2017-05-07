@@ -1,10 +1,6 @@
 
 #include "timer.h"
 
-// The current time, as provided to the pattern calculator.
-// It's a simple counter, that will overflow at MAX_T.
-volatile uint32_t t;
-
 void init_timer()
 {
     // Set the timer to Counter Mode
@@ -46,11 +42,6 @@ void TIMER2_Handler()
         // clear event
         NRF_TIMER2->EVENTS_COMPARE[0] = 0;
 
-        // increase time
-        t++;
-        if (t >= MAX_T)
-            t = 0;
-
         // make sure, only one instance is running at a time
         static volatile bool busy = false;
         if (busy)
@@ -62,7 +53,7 @@ void TIMER2_Handler()
         nrf_gpio_pin_toggle(NRFDUINO_PIN_LED);
         #endif
 
-        calculate_new_led_values(t);
+        update_patterns();
 
         // update all the strips
         // if they have changed

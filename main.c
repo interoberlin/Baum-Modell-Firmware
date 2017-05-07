@@ -25,6 +25,7 @@ int main(void)
     init_gpio();
     init_ledstrips();
     init_timer();
+    init_patterns();
 
     atx_powersupply_enable();
 

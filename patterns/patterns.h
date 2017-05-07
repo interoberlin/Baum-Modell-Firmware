@@ -5,21 +5,20 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-/*
-typedef
-    pattern initializer
+#include "sparkles.h"
 
-typedef struct
-{
-} pattern_t;
-*/
+#define SPARKLE_COUNT   1
+
+/**
+ * @brief Initialize all available patterns
+ */
+void init_patterns();
 
 /**
  * @brief Calculates new intensity values for all LEDs, \
- *        i.e. calculate the next "pattern frame"
- *
- * @param t The current "time"
+ *        i.e. calculate the next "pattern frame" \
+ *        for the currently selected pattern(s)
  */
-void calculate_new_led_values(uint32_t);
+void update_patterns();
 
 #endif // PATTERNS_H

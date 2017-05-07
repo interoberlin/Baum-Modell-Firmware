@@ -1,67 +1,44 @@
 /**
  * This library implements a sparkle effect for addressable LEDs.
- *
- * A specified number of LEDs is initialized,
- * the number and speed of sparkles is configured
- * and e.g. a timer ISR can then facilitate incremental
- * update of LED values.
- *
- * A function rand() must be implemented elsewhere,
- * which returns a random integer between [0;255].
  */
 
 #ifndef SPARKLES_H
+#define SPARKLES_H
 
-extern uint8_t rand();
-
-typedef struct
-{
-    uint8_t color[3];
-} rgb_t;
+#include <leds.h>
 
 typedef struct
 {
-    // by how many update steps to delay the start of this sparkle
-    // in order to make them look randomly appearing
-    uint32_t steps_delayed;
+    // the local frame counter
+    uint16_t t;
 
-    // the index of this sparkling LED in the LED memory referenced in sparkle_effect_t
-    uint8_t led_index;
+    // index of the frame, at which the sparkle is complete
+    uint16_t t_end;
 
-    // whether this sparkle currently increases or decreases
-    bool increasing;
+    // index of the frame, at which to begin fading in
+    uint16_t t_fade_in;
 
+    // index of the frame, at which to begin fading out
+    uint16_t t_fade_out;
+
+    // abstract index of the sparkling LED
+    uint16_t led;
 } sparkle_t;
 
-typedef struct
-{
-    // pointer to LED value memory
-    rgb_t *led_memory;
-
-    // number of LEDs in total
-    uint8_t led_count;
-
-    // pointer to the memory region, where individual sparkle configurations are stored
-    sparkle_t *sparkle_config;
-
-    // number of simultaneous sparkles
-    uint8_t sparkle_count;
-
-    // by which amount to change an LED value per step
-    uint8_t increment;
-
-} sparkle_effect_t;
-
 
 /**
- * Initialize all sparkles with random startup values
+ * Initialize the sparkle with random values
  */
-void init_sparkles(sparkle_effect_t*);
+void init_sparkle(sparkle_t*);
 
 /**
- * Go through all configured sparkles and apply them to the LED memory,
- * restart them with random values when finished
+ * Calculate current sparkle values and update selected LED
  */
-void update_sparkles(sparkle_effect_t*);
+void sparkle_update(sparkle_t*);
 
-#endif // SPARKLES
+/**
+ * Determine, whether the sparkle is complete or not
+ */
+bool is_sparkle_finished(sparkle_t*);
+
+#endif // SPARKLES_H

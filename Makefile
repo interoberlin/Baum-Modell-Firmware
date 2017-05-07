@@ -54,6 +54,7 @@ main.elf: \
 	leds/sk6812.o \
 	timer/timer.o \
 	patterns/patterns.o \
+	patterns/sparkles.o \
 	main.o
 		$(LD) $(LDFLAGS) -T $(LINKER_SCRIPT_BLANK) $^ -o $@ -Map main.map
 

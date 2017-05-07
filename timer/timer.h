@@ -16,9 +16,6 @@
 #include <nrf_gpio.h>
 #endif
 
-// when the time will overflow
-#define MAX_T 1000
-
 /**
  * @brief Sets up the pattern timer
  */
