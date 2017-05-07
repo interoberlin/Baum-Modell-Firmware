@@ -8,6 +8,7 @@
 
 // The timer will update the LEDs
 #include <leds.h>
+#include <patterns.h>
 
 // If we're running on nRFduino, blink the LED
 #ifdef BOARD_NRFDUINO

@@ -11,8 +11,11 @@
 #include <board.h>
 #include <leds.h>
 #include <timer.h>
+#include <patterns.h>
 
-extern neopixel_strip_t strip[NUM_STRIPS];
+
+extern neopixel_strip_t strip[];
+extern uint8_t leds_per_strip[];
 
 /**
  * Main program
@@ -54,12 +57,12 @@ works on nRFduino...
         for (value=0; value<60; value++)
         {
             // set all LEDs
-             for (led=0; led<LEDS_PER_STRIP; led++)
-                 for (s=0; s<NUM_STRIPS; s++)
+             for (s=0; s<LEDSTRIP_COUNT; s++)
+                 for (led=0; led<leds_per_strip[s]; led++)
                     neopixel_set_color(&strip[s], led, value, value, value);
 
             // show
-            for (s=0; s<NUM_STRIPS; s++)
+            for (s=0; s<LEDSTRIP_COUNT; s++)
                 neopixel_show(&strip[s]);
             // wait
             nrf_delay_ms(3);
@@ -70,12 +73,12 @@ works on nRFduino...
         {
 
             // set all LEDs
-             for (led=0; led<LEDS_PER_STRIP; led++)
-                 for (s=0; s<NUM_STRIPS; s++)
+             for (s=0; s<LEDSTRIP_COUNT; s++)
+                 for (led=0; led<leds_per_strip[s]; led++)
                     neopixel_set_color(&strip[s], led, value, value, value);
 
             // show
-            for (s=0; s<NUM_STRIPS; s++)
+            for (s=0; s<LEDSTRIP_COUNT; s++)
                 neopixel_show(&strip[s]);
             // wait
             nrf_delay_ms(3);

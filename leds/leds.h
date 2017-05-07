@@ -13,11 +13,8 @@
 
 #include "sk6812.h"
 
-
-#define NUM_STRIPS      4
-#define LEDS_PER_STRIP  150
-#define TOTAL_NUM_LEDS  (NUM_STRIPS*LEDS_PER_STRIP)
-
+#define LED_COLUMN_LEFT     0
+#define LED_COLUMN_RIGHT    1
 
 /**
  * @brief Initializes all LED strips
@@ -25,12 +22,9 @@
 void init_ledstrips();
 
 /**
- * @brief Calculates new intensity values for all LEDs, \
- *        i.e. calculate the next "pattern frame"
- *
- * @param t The current "time"
+ * @brief Set the value of a specific LED
  */
-void calculate_new_led_values(uint32_t);
+void set_led(uint8_t, uint16_t, uint8_t, uint8_t, uint8_t);
 
 /**
  * @brief Output LED values from RAM to LEDs
