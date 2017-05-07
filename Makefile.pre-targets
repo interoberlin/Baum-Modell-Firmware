@@ -51,6 +51,7 @@ CFLAGS += -I ./
 CFLAGS += -I $(PROJECT_ROOT)/
 CFLAGS += -I $(PROJECT_ROOT)/bluetooth/
 CFLAGS += -I $(PROJECT_ROOT)/bsp/
+CFLAGS += -I $(PROJECT_ROOT)/timer/
 CFLAGS += -I $(PROJECT_ROOT)/leds/
 CFLAGS += -I $(PROJECT_ROOT)/patterns/
 CFLAGS += -I $(PROJECT_ROOT)/nordic/

@@ -48,6 +48,8 @@ all: main.elf test_ble.elf
 main.elf: \
 	sdk/nrf51_startup.o \
 	nordic/nrf_delay.o \
+	timer/timer.o \
+	leds/leds.o \
 	leds/sk6812.o \
 	main.o
 		$(LD) $(LDFLAGS) -T $(LINKER_SCRIPT_BLANK) $^ -o $@ -Map main.map
