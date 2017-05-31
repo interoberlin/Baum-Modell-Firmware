@@ -7,7 +7,9 @@ inline void init_sparkle(sparkle_t *sparkle)
     sparkle->t = 0;
 
     // select a random LED
-    sparkle->led = 0x0001;  //select_random_led();
+    sparkle->led.strip_index = 7;
+    sparkle->led.led_index = 7;
+    // = 0x0001;  //select_random_led();
 
     // set a random fade-in time
     sparkle->t_fade_in = 15; // random256();
@@ -29,7 +31,7 @@ inline uint8_t sparkle_color_function(sparkle_t *sparkle)
     if (sparkle->t > sparkle->t_fade_out)
     {
         // fade out
-        return 256 - (sparkle->t - sparkle->t_fade_out); 
+        return 256 - (sparkle->t - sparkle->t_fade_out);
     }
     return 0;
 }

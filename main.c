@@ -27,7 +27,9 @@ int main(void)
     init_timer();
     init_patterns();
 
+#ifndef MINI_TREE
     atx_powersupply_enable();
+#endif
 
 /*
 works on nRFduino...
@@ -48,7 +50,7 @@ works on nRFduino...
         nrf_delay_ms(2000);
     }
 */
-
+/*
     // infinite loop: all LEDs: brightness up, brightness down
     while(true)
     {
@@ -84,5 +86,11 @@ works on nRFduino...
             // wait
             nrf_delay_ms(3);
         }
+    }
+*/
+
+    while (true)
+    {
+        asm("wfi");
     }
 }

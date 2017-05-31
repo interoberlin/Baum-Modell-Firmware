@@ -22,7 +22,7 @@ typedef struct
     uint16_t t_fade_out;
 
     // abstract index of the sparkling LED
-    uint16_t led;
+    led_index_t led;
 } sparkle_t;
 
 

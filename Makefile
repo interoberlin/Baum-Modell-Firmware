@@ -19,6 +19,7 @@ CFLAGS += -DS110
 CFLAGS += -DBOARD_NRFDUINO
 
 CFLAGS += -DTREE_SIDE_SOUTH
+CFLAGS += -DMINI_TREE
 
 # TODO: auto-detect chip revision
 CHIP_REVISION = aa
@@ -39,7 +40,8 @@ SOFTDEVICE_DEPENDENCIES = \
 	$(NORDIC_SDK_SOURCE)/ble/ble_conn_params.o \
 	$(NORDIC_SDK_SOURCE)/app_common/app_timer.o
 
-DEBUG_BINARY = tree.elf
+DEBUG_BINARY = main.elf
+BIN = main.elf
 
 #
 # Build targets
