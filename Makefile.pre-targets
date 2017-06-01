@@ -66,12 +66,14 @@ CFLAGS += -I $(PROJECT_ROOT)/nordic/sdk/nrf51822/Include/s110/
 CFLAGS += -I $(PROJECT_ROOT)/sdk/
 
 LDFLAGS += -L /usr/lib/gcc/arm-none-eabi/4.8/armv6-m/
-LDFLAGS += -L /usr/lib/arm-none-eabi/newlib/armv6-m/
+LDFLAGS += -L /usr/lib/gcc/arm-none-eabi/4.8/armv6-m/
+LDFLAGS += -L /usr/arm-none-eabi/lib/armv6-m/
 LDFLAGS += -static
 LDFLAGS += -nostartfiles
 # -nostdlib
 LDFLAGS += --start-group
-LDFLAGS += -lc -lgcc
+#LDFLAGS += -lc -lgcc
+LDFLAGS += -lc 
 
 # https://balau82.wordpress.com/2013/11/24/analyzing-c-source-files-dependencies-in-a-program/
 LDFLAGS += --cref
