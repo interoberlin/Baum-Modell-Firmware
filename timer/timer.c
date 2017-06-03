@@ -18,7 +18,7 @@ void init_timer()
      * 0 => 16 MHz
      * 6 => 250 kHz
      */
-    NRF_TIMER2->PRESCALER = 2;
+    NRF_TIMER2->PRESCALER = 3;
     // Set timer bit resolution
     NRF_TIMER2->BITMODE = TIMER_BITMODE_BITMODE_16Bit;
     // Set timer compare values
@@ -50,7 +50,7 @@ void TIMER2_Handler()
 
         // toggle LED for debugging
         #ifdef BOARD_NRFDUINO
-        nrf_gpio_pin_toggle(NRFDUINO_PIN_LED);
+        //nrf_gpio_pin_toggle(NRFDUINO_PIN_LED);
         #endif
 
         update_patterns();

@@ -61,8 +61,8 @@ void init_ledstrips()
         strip[strip_num].leds = memptr;
         memptr = memptr + leds_per_strip[strip_num]*3;
         neopixel_init(&strip[strip_num], strip_at_pin[strip_num], leds_per_strip[strip_num]);
-        // unnecessary, filled with zeroes by startup script anyways
-        //neopixel_clear(&strip[strip_num]);
+        // neopixel_clear() may be unnecessary, should be filled with zeroes by startup script anyways
+        neopixel_clear(&strip[strip_num]);
         strip_changed[strip_num] = true;
     }
 }
