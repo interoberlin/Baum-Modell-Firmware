@@ -56,7 +56,7 @@ typedef union
 {
     struct
     {
-        uint8_t ww, cw, a;
+        uint8_t cw, a, ww;
     } simple;
     uint8_t cwa[3];
 } color_t;
