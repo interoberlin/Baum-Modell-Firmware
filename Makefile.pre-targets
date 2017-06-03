@@ -66,8 +66,9 @@ CFLAGS += -I $(PROJECT_ROOT)/nordic/sdk/nrf51822/Include/s110/
 CFLAGS += -I $(PROJECT_ROOT)/sdk/
 
 LDFLAGS += -L /usr/lib/gcc/arm-none-eabi/4.8/armv6-m/
-LDFLAGS += -L /usr/lib/gcc/arm-none-eabi/7.1.0/armv6-m/
+LDFLAGS += -L /usr/lib/arm-none-eabi/newlib/armv6-m/
 LDFLAGS += -L /usr/arm-none-eabi/lib/armv6-m/
+LDFLAGS += -L /usr/lib/gcc/arm-none-eabi/7.1.0/armv6-m/
 LDFLAGS += -static
 LDFLAGS += -nostartfiles
 # -nostdlib
