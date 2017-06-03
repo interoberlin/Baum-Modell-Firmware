@@ -7,7 +7,7 @@
 
 #include "sparkles.h"
 
-#define SPARKLE_COUNT   1
+#define SPARKLE_COUNT   10
 
 /**
  * @brief Initialize all available patterns

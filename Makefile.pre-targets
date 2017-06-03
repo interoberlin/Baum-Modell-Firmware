@@ -45,7 +45,8 @@ CFLAGS += -fno-builtin
 CFLAGS += --short-enums
 
 # optimize!
-CFLAGS += -O3
+#CFLAGS += -O3
+CFLAGS += -Og
 
 CFLAGS += -I ./
 CFLAGS += -I $(PROJECT_ROOT)/

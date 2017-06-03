@@ -7,6 +7,7 @@
 
 #include <random.h>
 #include <leds.h>
+#include <patterns.h>
 
 typedef struct
 {
@@ -19,8 +20,14 @@ typedef struct
     // index of the frame, at which to begin fading in
     uint16_t t_fade_in;
 
+    // how many frames to spend fading in
+    uint16_t duration_fade_in;
+
     // index of the frame, at which to begin fading out
     uint16_t t_fade_out;
+
+    // count of frames to fade out
+    uint16_t duration_fade_out;
 
     // abstract index of the sparkling LED
     led_index_t led;
