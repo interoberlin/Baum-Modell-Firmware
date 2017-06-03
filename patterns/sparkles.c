@@ -33,42 +33,47 @@ inline void init_sparkle(sparkle_t *sparkle)
     sparkle->t = 0;
 
     // set a random fade-in time
-    sparkle->t_fade_in = rand() % 10;
+    sparkle->t_fade_in = 5 + rand() % 10;
 
-    sparkle->duration_fade_in = 5 + (rand() % 10);
+    sparkle->duration_fade_in = 5 + (rand() % 15);
 
     // set fade-out time after fade-in time
     sparkle->t_fade_out = sparkle->t_fade_in + sparkle->duration_fade_in;
 
-    sparkle->duration_fade_out = 5 + (rand() % 15);
+    sparkle->duration_fade_out = 5 + (rand() % 20);
 
     // set end time to when fade-out is complete
     sparkle->t_end = sparkle->t_fade_out + sparkle->duration_fade_out;
-}
 
-uint8_t sparkle_color_function(sparkle_t *sparkle)
-{
-    if (sparkle->t >= sparkle->t_end)
-        return 0;
-
-    if (sparkle->t >= sparkle->t_fade_out)
-    {
-        // fade out
-        return 255 - (sparkle->t - sparkle->t_fade_out) * 255/sparkle->duration_fade_out;
-    }
-    if (sparkle->t >= sparkle->t_fade_in)
-    {
-        // fade in
-       return (sparkle->t - sparkle->t_fade_in) * 255/sparkle->duration_fade_in;
-    }
-    return 0;
+    sparkle->color.simple.ww = rand();
+    sparkle->color.simple.cw = rand() % 25;
+    sparkle->color.simple.a = rand();
 }
 
 inline void sparkle_update(sparkle_t *sparkle)
 {
-    uint8_t color = sparkle_color_function(sparkle);
+    uint8_t ww = 0;
+    uint8_t cw = 0;
+    uint8_t a = 0;
 
-    set_led(sparkle->led, color, color, color);
+    if (sparkle->t >= sparkle->t_end)
+        ;
+    else if (sparkle->t >= sparkle->t_fade_out)
+    {
+        // fade out
+        ww = sparkle->color.simple.ww - (sparkle->t - sparkle->t_fade_out) * sparkle->color.simple.ww/sparkle->duration_fade_out;
+        cw = sparkle->color.simple.cw - (sparkle->t - sparkle->t_fade_out) * sparkle->color.simple.cw/sparkle->duration_fade_out;
+        a = sparkle->color.simple.a - (sparkle->t - sparkle->t_fade_out) * sparkle->color.simple.a/sparkle->duration_fade_out;
+    }
+    else if (sparkle->t >= sparkle->t_fade_in)
+    {
+        // fade in
+       ww = (sparkle->t - sparkle->t_fade_in) * sparkle->color.simple.ww/sparkle->duration_fade_in;
+       cw = (sparkle->t - sparkle->t_fade_in) * sparkle->color.simple.cw/sparkle->duration_fade_in;
+       a = (sparkle->t - sparkle->t_fade_in) * sparkle->color.simple.a/sparkle->duration_fade_in;
+    }
+
+    set_led(sparkle->led, ww, cw, a);
 }
 
 inline bool is_sparkle_finished(sparkle_t *sparkle)

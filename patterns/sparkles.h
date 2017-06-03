@@ -8,6 +8,7 @@
 #include <random.h>
 #include <leds.h>
 #include <patterns.h>
+#include <sk6812.h>
 
 typedef struct
 {
@@ -31,6 +32,9 @@ typedef struct
 
     // abstract index of the sparkling LED
     led_index_t led;
+
+    // target color
+    color_t color;
 } sparkle_t;
 
 
