@@ -51,6 +51,7 @@ all: main.elf test_ble.elf
 
 main.elf: \
 	sdk/nrf51_startup.o \
+	sdk/random.o \
 	nordic/nrf_delay.o \
 	leds/leds.o \
 	leds/sk6812.o \

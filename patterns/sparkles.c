@@ -7,6 +7,7 @@ inline void init_sparkle(sparkle_t *sparkle)
     sparkle->t = 0;
 
     // select a random LED
+/*
     sparkle->led.led_index++;
     if (sparkle->led.led_index > 9)
     {
@@ -15,6 +16,9 @@ inline void init_sparkle(sparkle_t *sparkle)
         if (sparkle->led.strip_index > 7)
             sparkle->led.strip_index = 0;
     }
+*/
+    sparkle->led.strip_index = rand() % 8;
+    sparkle->led.led_index = rand() % 10;
 
 
     // = 0x0001;  //select_random_led();

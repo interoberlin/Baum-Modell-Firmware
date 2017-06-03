@@ -7,6 +7,7 @@
 
 #include <nrf51.h>
 #include <nrf_delay.h>
+#include <random.h>
 
 #include <board.h>
 #include <leds.h>
@@ -22,6 +23,7 @@ extern uint8_t leds_per_strip[];
  */
 int main(void)
 {
+    srand(0);
     init_gpio();
     init_ledstrips();
     init_timer();

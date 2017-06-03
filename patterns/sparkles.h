@@ -5,6 +5,7 @@
 #ifndef SPARKLES_H
 #define SPARKLES_H
 
+#include <random.h>
 #include <leds.h>
 
 typedef struct
